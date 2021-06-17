@@ -15,8 +15,6 @@ const app = new Clarifai.App({
   apiKey: '6e58f73ae8a74802b5ff45e0cd074730'
 });
 
-// c0c0ac362b03416da06ab3fa36fb58e3
-
 const particlesOptions = {
     particles: {
       number: {
@@ -35,7 +33,8 @@ class App extends Component {
       input: '',
       imageUrl: '',
       box: {},
-      route: 'signin'
+      route: 'signin',
+      isSignedIn: false
     }
   }
 
@@ -45,24 +44,19 @@ class App extends Component {
       const width = Number(image.width);
       const height = Number(image.height);
 
-      console.log(clarifaiFace);
       return{
         leftCol: clarifaiFace.left_col * width,
         topRow: clarifaiFace.top_row * height,
         rightCol: width - (clarifaiFace.right_col * width),
         bottomRow: height - (clarifaiFace.bottom_row * height)
-
       }
     }
 
-
-
-    displayFaceBox = (box) => {
-      console.log(box);
+  displayFaceBox = (box) => {
       this.setState({ box: box });
     }
 
-   onInputChange = (event) => {
+  onInputChange = (event) => {
     this.setState({ input: event.target.value });
   }
 
@@ -74,23 +68,27 @@ class App extends Component {
         this.state.input
       )
       .then(response => this.displayFaceBox(this.calculateFaceLocation(response)))
-      .catch(err => console.log(err));
-      
+      .catch(err => console.log(err));    
   }
 
   onRouteChange = (route) => {
+    if(route === 'signout'){
+      this.setState({isSignedIn : false})
+    } else if(route === 'home'){
+      this.setState({isSignedIn : true})
+    }
     this.setState({route: route});
   }
-
  
   render() {
+    const { isSignedIn, imageUrl, route, box } = this.state;
     return (
     <div className="App">
         <Particles className='particles' 
                 params={particlesOptions} 
         />
-      <Navigation onRouteChange={this.onRouteChange}/>
-      { this.state.route === 'home'
+      <Navigation isSignedIn={isSignedIn} onRouteChange={this.onRouteChange}/>
+      { route === 'home'
         ? <div>
             <Logo />
             <Rank />
@@ -98,10 +96,10 @@ class App extends Component {
               onInputChange={this.onInputChange} 
               onButtonSubmit={this.onButtonSubmit} 
             />
-            <FaceRecognition box={this.state.box} imageUrl={this.state.imageUrl} />
+            <FaceRecognition box={box} imageUrl={imageUrl} />
           </div>
         : (
-            this.state.route === 'signin'
+            route === 'signin'
             ? <Signin onRouteChange={this.onRouteChange}/>
             : <Register onRouteChange={this.onRouteChange}/>
           )
